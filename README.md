@@ -1,6 +1,6 @@
 # RailsMaint
-<img src="https://github.com/user-attachments/assets/4daa45fe-833b-48c5-9f69-457424769804" width="500" height="500" alt="rails_maint">
 
+<img src="https://github.com/user-attachments/assets/4daa45fe-833b-48c5-9f69-457424769804" width="500" height="500" alt="rails_maint">
 
 RailsMaint is a simple and customizable maintenance mode gem for Rails applications. It allows you to display a sleek maintenance page to your users during maintenance work.
 
@@ -8,7 +8,7 @@ RailsMaint is a simple and customizable maintenance mode gem for Rails applicati
 
 - 🚀 Easy setup and usage
 - 🎨 Customizable, modern maintenance page design
-- 🌍 Multi-language support (English and Turkish)
+- 🌍 Multi-language support (English, Turkish, Spanish, French, Arabic, and Russian)
 - 🔒 IP whitelist support
 - 💻 Simple CLI commands
 - 🎯 Rails Middleware integration
@@ -46,6 +46,7 @@ rails_maint install --locale=tr
 ```
 
 This command creates the following files:
+
 - `config/rails_maint.yml` - Configuration file
 - `config/locales/rails_maint.{locale}.yml` - Language file
 
@@ -82,7 +83,7 @@ white_listed_ips:
 
 Language files are stored in the `config/locales` directory. You can customize existing translations or add new languages:
 
-```
+```yml
 # config/locales/rails_maint.en.yml
 en:
 rails_maint:
@@ -91,7 +92,7 @@ description: "Our system is currently being updated..."
 estimated_time: "Estimated time: 1 hour"
 ```
 
-```
+```yml
 # config/locales/rails_maint.tr.yml
 tr:
 rails_maint:
@@ -99,6 +100,8 @@ title: "Sistem Bakımda"
 description: "Sistemimiz şu anda güncelleniyor..."
 estimated_time: "Tahmini süre: 1 saat"
 ```
+
+You can see a list of supported languages from [here](lib/rails_maint/assets/locales).
 
 ## How IP Whitelist Works
 
@@ -152,6 +155,7 @@ Make sure your IP is correctly added to the configuration file and you're not be
 ### Language Not Changing
 
 Verify that:
+
 1. The locale file exists
 2. The locale is correctly set in the configuration
 3. The Rails server was restarted after changes

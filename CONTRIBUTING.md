@@ -46,7 +46,7 @@ feat: Add Turkish language support
 - Add tr.yml locale file
 - Update middleware to handle Turkish locale
 - Add documentation for Turkish support
-  ```
+```
 
 ## Tests
 
@@ -87,6 +87,10 @@ rails_maint/
 │           ├── locales/
 │           │   ├── en.yml
 │           │   └── tr.yml
+│           │   └── ru.yml
+│           │   └── es.yml
+│           │   └── ar.yml
+│           │   └── fr.yml
 │           ├── maintenance.html
 │           └── default.css
 ```

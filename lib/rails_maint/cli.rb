@@ -33,6 +33,10 @@ module RailsMaint
       delete_file('config/rails_maint.yml')
       delete_file('config/locales/rails_maint.en.yml')
       delete_file('config/locales/rails_maint.tr.yml')
+      delete_file('config/locales/rails_maint.ar.yml')
+      delete_file('config/locales/rails_maint.es.yml')
+      delete_file('config/locales/rails_maint.ru.yml')
+      delete_file('config/locales/rails_maint.fr.yml')
       puts "RailsMaint has been uninstalled and all related files have been removed."
     end
 
