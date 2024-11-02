@@ -1,0 +1,5 @@
+en:
+  rails_maint:
+    title: "System Maintenance"
+    description: "Our system is currently being updated..."
+    estimated_time: "Estimated time: 1 hour"
