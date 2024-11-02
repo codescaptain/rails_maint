@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rails_maint (0.1.0)
+    rails_maint (0.1.1)
       rails (>= 6.0)
       thor (~> 1.3)
 
@@ -101,7 +101,7 @@ GEM
     net-smtp (0.5.0)
       net-protocol
     nio4r (2.7.4)
-    nokogiri (1.13.10-arm64-darwin)
+    nokogiri (1.16.7-arm64-darwin)
       racc (~> 1.4)
     parallel (1.24.0)
     parser (3.3.5.1)
