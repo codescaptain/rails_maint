@@ -1,4 +1,6 @@
 # RailsMaint
+<img src="https://github.com/user-attachments/assets/4daa45fe-833b-48c5-9f69-457424769804" width="500" height="500" alt="rails_maint">
+
 
 RailsMaint is a simple and customizable maintenance mode gem for Rails applications. It allows you to display a sleek maintenance page to your users during maintenance work.
 
