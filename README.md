@@ -6,126 +6,247 @@ RailsMaint is a simple and customizable maintenance mode gem for Rails applicati
 
 ## Features
 
-- 🚀 Easy setup and usage
-- 🎨 Customizable, modern maintenance page design
-- 🌍 Multi-language support (English and Turkish)
-- 🔒 IP whitelist support
-- 💻 Simple CLI commands
-- 🎯 Rails Middleware integration
+- Easy setup — just 2 commands to install
+- Automatic middleware registration via Railtie
+- Configuration DSL and YAML config support
+- Retry-After HTTP header for SEO-friendly 503 responses
+- Route-based maintenance with bypass paths
+- Scheduled maintenance windows with auto-deactivation
+- Custom maintenance page support
+- Multi-language support (English and Turkish)
+- IP whitelist support
+- CLI commands (install, enable, disable, status, uninstall)
+- Webhook notifications on enable/disable events
+- Rails Generator for quick setup
 
 ## Installation
 
-1. Add this line to your application's Gemfile:
+### Rails Apps (Recommended)
 
+```bash
+bundle add rails_maint
+rails generate rails_maint:install
 ```
+
+That's it! The Railtie automatically registers the middleware. The generator creates:
+- `config/rails_maint.yml` — Configuration file
+- `config/locales/rails_maint.en.yml` — Language file
+- `config/initializers/rails_maint.rb` — Initializer with DSL configuration
+
+### Manual Setup
+
+1. Add to your Gemfile:
+
+```ruby
 gem 'rails_maint'
 ```
 
-2. Execute:
+2. Run:
 
-```
+```bash
 bundle install
+rails_maint install
 ```
 
-3. Add the middleware to your Rails application's `config/application.rb`:
+3. If you need manual middleware registration (the Railtie handles this automatically):
 
-```
+```ruby
+# config/application.rb
 config.middleware.use RailsMaint::Middleware
 ```
 
 ## Usage
 
-### Installing the Gem
-
-```
-# For English (default)
-rails_maint install
-
-# For Turkish
-rails_maint install --locale=tr
-```
-
-This command creates the following files:
-- `config/rails_maint.yml` - Configuration file
-- `config/locales/rails_maint.{locale}.yml` - Language file
-
 ### Managing Maintenance Mode
 
-```
-# To enable maintenance mode
+```bash
+# Enable maintenance mode
 rails_maint enable
 
-# To disable maintenance mode
+# Enable with scheduled window
+rails_maint enable --start="2024-06-01 10:00" --end="2024-06-01 12:00"
+
+# Disable maintenance mode
 rails_maint disable
 
-# To remove all files
+# Check current status
+rails_maint status
+
+# Remove all RailsMaint files
 rails_maint uninstall
+```
+
+### Status Command
+
+```bash
+$ rails_maint status
+Status: ENABLED
+  Enabled at: 2024-06-01 10:00:00 +0000
+  Start time: 2024-06-01 10:00:00 +0000
+  End time:   2024-06-01 12:00:00 +0000
+  Remaining:  3542s
+
+Locale: en
+Whitelisted IPs: 127.0.0.1, ::1
+Bypass paths: /health, /up
+Retry-After: 3600s
+Custom page: none
+Webhook URL: none
 ```
 
 ## Configuration
 
-You can customize your settings in `config/rails_maint.yml`:
+### YAML Configuration
 
-```
+Customize your settings in `config/rails_maint.yml`:
+
+```yaml
 # Default language setting
 locale: en
 
-# IP addresses allowed to access
+# IP addresses allowed to access during maintenance
 white_listed_ips:
-- 127.0.0.1
-- ::1
-# Add your IPs
-# - 192.168.1.1
+  - 127.0.0.1
+  - "::1"
+
+# Retry-After header value in seconds (default: 3600)
+retry_after: 3600
+
+# Paths that bypass maintenance mode (always accessible)
+bypass_paths:
+  - /health
+  - /up
+  - /api/status
+
+# Only apply maintenance to specific paths (empty = all paths)
+# maintenance_paths:
+#   - /api/*
+
+# Custom maintenance page (relative to app root)
+# custom_page: public/maintenance.html
+
+# Webhook URL for maintenance notifications
+# webhook_url: https://hooks.slack.com/services/...
 ```
+
+### DSL Configuration
+
+Configure programmatically in `config/initializers/rails_maint.rb`:
+
+```ruby
+RailsMaint.configure do |config|
+  config.locale = 'en'
+  config.white_listed_ips = ['127.0.0.1', '::1']
+  config.retry_after = 3600
+  config.bypass_paths = ['/health', '/up']
+  config.maintenance_paths = []
+  config.custom_page_path = 'public/maintenance.html'
+  config.webhook_url = 'https://hooks.slack.com/services/...'
+end
+```
+
+**Precedence:** YAML config > DSL config > defaults
+
+## Route-Based Maintenance
+
+### Bypass Paths
+
+Keep certain endpoints accessible during maintenance:
+
+```yaml
+bypass_paths:
+  - /health
+  - /up
+  - /api/status
+```
+
+### Maintenance Paths
+
+Only show maintenance for specific paths (all others pass through):
+
+```yaml
+maintenance_paths:
+  - /api/*
+```
+
+Wildcard matching is supported with `/*` suffix for prefix matching. When both are configured, `bypass_paths` takes precedence.
+
+## Scheduled Maintenance
+
+Schedule a maintenance window that auto-deactivates:
+
+```bash
+rails_maint enable --start="2024-06-01 10:00" --end="2024-06-01 12:00"
+```
+
+- Before `start_time`: requests pass through normally
+- Between `start_time` and `end_time`: maintenance page is shown
+- After `end_time`: requests pass through again
+- The `Retry-After` header is automatically computed from the remaining time
+
+## Custom Maintenance Page
+
+Serve your own HTML file instead of the default template:
+
+```yaml
+custom_page: public/maintenance.html
+```
+
+The file path is validated against path traversal attacks. If the file doesn't exist, the default template is used as a fallback.
+
+## Webhook Notifications
+
+Get notified when maintenance mode changes:
+
+```yaml
+webhook_url: https://hooks.slack.com/services/T00/B00/xxx
+```
+
+The gem sends a POST request with a JSON payload:
+
+```json
+{
+  "event": "maintenance.enabled",
+  "timestamp": "2024-06-01T10:00:00+00:00",
+  "gem": "rails_maint",
+  "version": "0.1.1"
+}
+```
+
+Events: `maintenance.enabled`, `maintenance.disabled`
 
 ## Language Support
 
 Language files are stored in the `config/locales` directory. You can customize existing translations or add new languages:
 
-```
+```yaml
 # config/locales/rails_maint.en.yml
 en:
-rails_maint:
-title: "System Maintenance"
-description: "Our system is currently being updated..."
-estimated_time: "Estimated time: 1 hour"
-```
-
-```
-# config/locales/rails_maint.tr.yml
-tr:
-rails_maint:
-title: "Sistem Bakımda"
-description: "Sistemimiz şu anda güncelleniyor..."
-estimated_time: "Tahmini süre: 1 saat"
+  rails_maint:
+    title: "System Maintenance"
+    description: "Our system is currently being updated..."
+    estimated_time: "Estimated time: 1 hour"
+    remaining_time: "Estimated remaining time: %{time}"
 ```
 
 ## How IP Whitelist Works
 
 - When maintenance mode is active, IPs in the whitelist can access the site normally
 - All other IPs will see the maintenance page
-- If behind a proxy, the gem checks the X-Forwarded-For header
-- Each IP should be added to the configuration file
+- The gem uses `REMOTE_ADDR` for IP checking (not `X-Forwarded-For`, to prevent spoofing)
+- IPs can be configured via both YAML and DSL (merged from both sources)
+
+## Requirements
+
+- Rails 6.0 or higher
+- Ruby 3.0 or higher
 
 ## Development
 
 1. Clone the repository
 2. Install dependencies: `bundle install`
 3. Run tests: `bundle exec rspec`
-
-## Customizing the Maintenance Page
-
-The maintenance page template can be customized by creating your own version in `public/maintenance.html`. The default template includes:
-
-- Responsive design
-- Animated maintenance icon
-- Clean and modern layout
-- Estimated time display
-
-## Rails Version Support
-
-- Rails 6.0 or higher
-- Ruby 2.6 or higher
+4. Run linter: `bundle exec rubocop`
 
 ## Contributing
 
@@ -135,32 +256,13 @@ The maintenance page template can be customized by creating your own version in 
 4. Push to the branch (`git push origin feature/amazing_feature`)
 5. Create a Pull Request
 
-## Best Practices
-
-- Always test your changes
-- Follow the Ruby Style Guide
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation when needed
-
-## Common Issues
-
-### IP Whitelist Not Working
-
-Make sure your IP is correctly added to the configuration file and you're not behind an unexpected proxy.
-
-### Language Not Changing
-
-Verify that:
-1. The locale file exists
-2. The locale is correctly set in the configuration
-3. The Rails server was restarted after changes
-
 ## Security
 
-- The gem uses Rails' built-in security features
-- IP validation is performed securely
-- No sensitive information is exposed
+- Uses `REMOTE_ADDR` for IP validation (prevents spoofing via `X-Forwarded-For`)
+- HTML-escapes all translation values to prevent XSS
+- Uses `YAML.safe_load_file` for safe deserialization
+- Validates locale format with strict regex pattern
+- Path traversal protection for custom maintenance pages and locale files
 
 ## License
 
