@@ -3,3 +3,4 @@ en:
     title: "System Maintenance"
     description: "Our system is currently being updated..."
     estimated_time: "Estimated time: 1 hour"
+    remaining_time: "Estimated remaining time: %{time}"

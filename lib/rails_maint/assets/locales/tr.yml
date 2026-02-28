@@ -3,3 +3,4 @@ tr:
     title: "Sistem Bakımda"
     description: "Sistemimiz şu anda güncelleniyor..."
     estimated_time: "Tahmini süre: 1 saat"
+    remaining_time: "Tahmini kalan süre: %{time}"

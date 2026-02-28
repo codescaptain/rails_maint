@@ -1,0 +1,31 @@
+# frozen_string_literal: true
+
+# RailsMaint Configuration
+# Middleware is automatically registered via Railtie.
+# Settings here override defaults; YAML config (config/rails_maint.yml) takes precedence.
+
+RailsMaint.configure do |config|
+  # Locale for the maintenance page (default: 'en')
+  # config.locale = '<%= options[:locale] %>'
+
+  # IP addresses that bypass maintenance mode
+  # config.white_listed_ips = ['127.0.0.1', '::1']
+
+  # Path to the maintenance flag file
+  # config.maintenance_file_path = 'tmp/maintenance_mode.txt'
+
+  # Retry-After header value in seconds
+  # config.retry_after = 3600
+
+  # Paths that always bypass maintenance mode
+  # config.bypass_paths = ['/health', '/up']
+
+  # Only apply maintenance to specific paths (empty = all paths)
+  # config.maintenance_paths = []
+
+  # Custom maintenance page path (relative to app root)
+  # config.custom_page_path = 'public/maintenance.html'
+
+  # Webhook URL for maintenance event notifications
+  # config.webhook_url = 'https://hooks.slack.com/services/...'
+end

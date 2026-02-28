@@ -1,0 +1,32 @@
+# RailsMaint Configuration
+# -----------------------
+
+# Default locale for maintenance page
+locale: <%= options[:locale] %>
+
+# IP addresses that can access the application during maintenance
+white_listed_ips:
+  - 127.0.0.1
+  - "::1"
+  # Add more IPs below
+  # - 192.168.1.1
+
+# Retry-After header value in seconds (default: 3600)
+# retry_after: 3600
+
+# Paths that bypass maintenance mode (always accessible)
+# bypass_paths:
+#   - /health
+#   - /up
+#   - /api/status
+
+# Paths that are affected by maintenance mode (all others pass through)
+# When empty, all paths are affected
+# maintenance_paths:
+#   - /api/*
+
+# Custom maintenance page (relative to app root)
+# custom_page: public/maintenance.html
+
+# Webhook URL for maintenance notifications (e.g., Slack incoming webhook)
+# webhook_url: https://hooks.slack.com/services/...

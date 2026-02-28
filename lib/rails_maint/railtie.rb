@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+module RailsMaint
+  class Railtie < Rails::Railtie
+    initializer 'rails_maint.middleware' do |app|
+      app.middleware.use RailsMaint::Middleware unless app.middleware.include?(RailsMaint::Middleware)
+    end
+  end
+end

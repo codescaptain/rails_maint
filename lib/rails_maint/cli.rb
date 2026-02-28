@@ -2,7 +2,12 @@
 
 require 'thor'
 require 'fileutils'
+require 'json'
+require 'time'
 require_relative 'helpers/maintenance_page_helper'
+require_relative 'config_loader'
+require_relative 'webhook'
+require_relative 'cli/status_printer'
 
 module RailsMaint
   class CLI < Thor
@@ -14,19 +19,34 @@ module RailsMaint
       create_config_file
       create_locale_file(options[:locale])
       puts "RailsMaint has been installed with #{options[:locale]} locale."
+      puts 'Tip: In Rails apps, you can also use: rails generate rails_maint:install'
     end
 
     desc 'enable', 'Enable maintenance mode'
+    method_option :start, type: :string, default: nil, desc: 'Scheduled start time (e.g., "2024-01-01 10:00")'
+    method_option :end, type: :string, default: nil, desc: 'Scheduled end time (e.g., "2024-01-01 12:00")'
     def enable
       FileUtils.mkdir_p('tmp')
-      File.write('tmp/maintenance_mode.txt', Time.now.to_s)
+
+      data = build_schedule_data
+      File.write('tmp/maintenance_mode.txt', data)
       puts 'Maintenance mode enabled.'
+      puts "  Scheduled start: #{options[:start]}" if options[:start]
+      puts "  Scheduled end: #{options[:end]}" if options[:end]
+
+      notify_webhook('maintenance.enabled')
     end
 
     desc 'disable', 'Disable maintenance mode'
     def disable
       delete_file('tmp/maintenance_mode.txt')
       puts 'Maintenance mode disabled.'
+      notify_webhook('maintenance.disabled')
+    end
+
+    desc 'status', 'Show current maintenance mode status'
+    def status
+      StatusPrinter.new.print
     end
 
     desc 'uninstall', 'Remove all files created by RailsMaint'
@@ -34,10 +54,28 @@ module RailsMaint
       delete_file('tmp/maintenance_mode.txt')
       delete_file('config/rails_maint.yml')
       Dir.glob('config/locales/rails_maint.*.yml').each { |f| delete_file(f) }
+      delete_file('config/initializers/rails_maint.rb')
       puts 'RailsMaint has been uninstalled and all related files have been removed.'
     end
 
     private
+
+    def build_schedule_data
+      if options[:start] || options[:end]
+        data = { 'enabled_at' => Time.now.iso8601 }
+        data['start_time'] = Time.parse(options[:start]).iso8601 if options[:start]
+        data['end_time'] = Time.parse(options[:end]).iso8601 if options[:end]
+        JSON.generate(data)
+      else
+        Time.now.to_s
+      end
+    end
+
+    def notify_webhook(event)
+      config = ConfigLoader.load
+      url = config['webhook_url']
+      Webhook.notify(url, event: event) if url
+    end
 
     def create_locale_file(locale = 'en')
       locale_dir = 'config/locales'

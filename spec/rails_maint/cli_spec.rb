@@ -3,6 +3,7 @@
 require 'spec_helper'
 require 'tmpdir'
 require 'fileutils'
+require 'json'
 
 RSpec.describe RailsMaint::CLI do
   subject(:cli) { described_class.new }
@@ -64,6 +65,12 @@ RSpec.describe RailsMaint::CLI do
         output = capture_stdout { cli.invoke(:install) }
 
         expect(output).to include('RailsMaint has been installed with en locale.')
+      end
+
+      it 'prints the Rails generator tip' do
+        output = capture_stdout { cli.invoke(:install) }
+
+        expect(output).to include('Tip: In Rails apps, you can also use: rails generate rails_maint:install')
       end
     end
 
@@ -167,6 +174,45 @@ RSpec.describe RailsMaint::CLI do
         expect { capture_stdout { cli.invoke(:enable) } }.not_to raise_error
       end
     end
+
+    context 'with --start and --end options' do
+      it 'writes JSON data with schedule information' do
+        capture_stdout do
+          cli.invoke(:enable, [], start: '2024-06-01 10:00', end: '2024-06-01 12:00')
+        end
+
+        content = File.read(maintenance_file)
+        data = JSON.parse(content)
+
+        expect(data).to have_key('enabled_at')
+        expect(data).to have_key('start_time')
+        expect(data).to have_key('end_time')
+      end
+
+      it 'prints schedule information' do
+        output = capture_stdout do
+          cli.invoke(:enable, [], start: '2024-06-01 10:00', end: '2024-06-01 12:00')
+        end
+
+        expect(output).to include('Scheduled start: 2024-06-01 10:00')
+        expect(output).to include('Scheduled end: 2024-06-01 12:00')
+      end
+    end
+
+    context 'with only --end option' do
+      it 'writes JSON data with end_time but no start_time' do
+        capture_stdout do
+          cli.invoke(:enable, [], end: '2024-06-01 12:00')
+        end
+
+        content = File.read(maintenance_file)
+        data = JSON.parse(content)
+
+        expect(data).to have_key('enabled_at')
+        expect(data).not_to have_key('start_time')
+        expect(data).to have_key('end_time')
+      end
+    end
   end
 
   describe '#disable' do
@@ -214,15 +260,98 @@ RSpec.describe RailsMaint::CLI do
     end
   end
 
+  describe '#status' do
+    context 'when maintenance mode is disabled' do
+      it 'shows DISABLED status' do
+        output = capture_stdout { cli.invoke(:status) }
+
+        expect(output).to include('Status: DISABLED')
+      end
+    end
+
+    context 'when maintenance mode is enabled' do
+      before do
+        FileUtils.mkdir_p('tmp')
+        File.write(maintenance_file, Time.now.to_s)
+      end
+
+      it 'shows ENABLED status' do
+        output = capture_stdout { cli.invoke(:status) }
+
+        expect(output).to include('Status: ENABLED')
+      end
+    end
+
+    context 'when maintenance mode is enabled with schedule' do
+      before do
+        FileUtils.mkdir_p('tmp')
+        now = Time.now
+        data = {
+          'enabled_at' => now.iso8601,
+          'start_time' => now.iso8601,
+          'end_time' => (now + 3600).iso8601
+        }
+        File.write(maintenance_file, JSON.generate(data))
+      end
+
+      it 'shows schedule information' do
+        output = capture_stdout { cli.invoke(:status) }
+
+        expect(output).to include('Status: ENABLED')
+        expect(output).to include('Start time:')
+        expect(output).to include('End time:')
+        expect(output).to include('Remaining:')
+      end
+    end
+
+    context 'with config file present' do
+      before do
+        FileUtils.mkdir_p('config')
+        File.write(config_file, YAML.dump(
+                                  'locale' => 'tr',
+                                  'white_listed_ips' => ['10.0.0.1'],
+                                  'bypass_paths' => ['/health'],
+                                  'retry_after' => 1800,
+                                  'custom_page' => 'public/maintenance.html',
+                                  'webhook_url' => 'https://example.com/hook'
+                                ))
+      end
+
+      it 'displays configuration details' do
+        output = capture_stdout { cli.invoke(:status) }
+
+        expect(output).to include('Locale: tr')
+        expect(output).to include('10.0.0.1')
+        expect(output).to include('/health')
+        expect(output).to include('Retry-After: 1800s')
+        expect(output).to include('public/maintenance.html')
+        expect(output).to include('https://example.com/hook')
+      end
+    end
+
+    context 'without config file' do
+      it 'shows defaults' do
+        output = capture_stdout { cli.invoke(:status) }
+
+        expect(output).to include('Locale: en')
+        expect(output).to include('Whitelisted IPs: none')
+        expect(output).to include('Bypass paths: none')
+        expect(output).to include('Retry-After: 3600s')
+      end
+    end
+  end
+
   describe '#uninstall' do
     context 'when all files exist' do
       before do
         FileUtils.mkdir_p('tmp')
         FileUtils.mkdir_p('config/locales')
+        FileUtils.mkdir_p('config/initializers')
         File.write(maintenance_file, Time.now.to_s)
         File.write(config_file, 'config content')
         File.write(locale_file_en, 'en locale content')
         File.write(locale_file_tr, 'tr locale content')
+        File.write('config/initializers/rails_maint.rb', 'initializer content')
       end
 
       it 'removes the maintenance file' do
@@ -244,6 +373,12 @@ RSpec.describe RailsMaint::CLI do
         expect(File).not_to exist(locale_file_tr)
       end
 
+      it 'removes the initializer file' do
+        capture_stdout { cli.invoke(:uninstall) }
+
+        expect(File).not_to exist('config/initializers/rails_maint.rb')
+      end
+
       it 'prints removal messages for each file' do
         output = capture_stdout { cli.invoke(:uninstall) }
 
@@ -251,6 +386,7 @@ RSpec.describe RailsMaint::CLI do
         expect(output).to include("#{config_file} has been removed.")
         expect(output).to include("#{locale_file_en} has been removed.")
         expect(output).to include("#{locale_file_tr} has been removed.")
+        expect(output).to include('config/initializers/rails_maint.rb has been removed.')
       end
 
       it 'prints the uninstall confirmation message' do
