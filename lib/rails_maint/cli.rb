@@ -61,6 +61,7 @@ module RailsMaint
       config_path = 'config/rails_maint.yml'
       return if File.exist?(config_path)
 
+      FileUtils.mkdir_p('config')
       File.write(config_path, default_config_content)
     end
 

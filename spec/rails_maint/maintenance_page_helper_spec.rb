@@ -81,49 +81,51 @@ RSpec.describe RailsMaint::MaintenancePageHelper do
       end
 
       it 'accepts locale with region code like pt-BR' do
-        # pt-BR matches the pattern but the locale file may not exist.
-        # We only test that the format validation passes, not the file lookup.
-        expect {
+        # pt-BR passes format validation but file may not exist - we test format only
+        expect do
           helper.default_maintenance_page_content('pt-BR')
-        }.not_to raise_error(ArgumentError, /Invalid locale format/)
+        rescue Errno::ENOENT
+          # Expected - file does not exist, but format validation passed
+          nil
+        end.not_to raise_error
       end
     end
 
     context 'with invalid locale formats' do
       it 'raises ArgumentError for path traversal attempt' do
-        expect {
+        expect do
           helper.default_maintenance_page_content('../../etc/passwd')
-        }.to raise_error(ArgumentError, /Invalid locale format/)
+        end.to raise_error(ArgumentError, /Invalid locale format/)
       end
 
       it 'raises ArgumentError for empty string' do
-        expect {
+        expect do
           helper.default_maintenance_page_content('')
-        }.to raise_error(ArgumentError, /Invalid locale format/)
+        end.to raise_error(ArgumentError, /Invalid locale format/)
       end
 
       it 'raises ArgumentError for numeric locale' do
-        expect {
+        expect do
           helper.default_maintenance_page_content(123)
-        }.to raise_error(ArgumentError, /Invalid locale format/)
+        end.to raise_error(ArgumentError, /Invalid locale format/)
       end
 
       it 'raises ArgumentError for uppercase-only locale' do
-        expect {
+        expect do
           helper.default_maintenance_page_content('EN')
-        }.to raise_error(ArgumentError, /Invalid locale format/)
+        end.to raise_error(ArgumentError, /Invalid locale format/)
       end
 
       it 'raises ArgumentError for locale with special characters' do
-        expect {
+        expect do
           helper.default_maintenance_page_content('e<n')
-        }.to raise_error(ArgumentError, /Invalid locale format/)
+        end.to raise_error(ArgumentError, /Invalid locale format/)
       end
 
       it 'raises ArgumentError for overly long locale string' do
-        expect {
+        expect do
           helper.default_maintenance_page_content('english')
-        }.to raise_error(ArgumentError, /Invalid locale format/)
+        end.to raise_error(ArgumentError, /Invalid locale format/)
       end
     end
 
@@ -215,6 +217,13 @@ RSpec.describe RailsMaint::MaintenancePageHelper do
   end
 
   describe '#load_translations (private)' do
+    let(:base_path) do
+      source_file = RailsMaint::MaintenancePageHelper.instance_method(
+        :default_maintenance_page_content
+      ).source_location.first
+      File.expand_path('..', File.dirname(source_file))
+    end
+
     context 'when app locale file exists' do
       it 'loads translations from the app locale file' do
         Dir.mktmpdir do |tmpdir|
@@ -231,18 +240,12 @@ RSpec.describe RailsMaint::MaintenancePageHelper do
             }
           }
 
-          app_locale_file = File.join(app_locale_dir, 'rails_maint.en.yml')
-          File.write(app_locale_file, YAML.dump(app_translations))
+          File.write(
+            File.join(app_locale_dir, 'rails_maint.en.yml'),
+            YAML.dump(app_translations)
+          )
 
           Dir.chdir(tmpdir) do
-            base_path = File.expand_path(
-              '..',
-              File.dirname(
-                RailsMaint::MaintenancePageHelper.instance_method(
-                  :default_maintenance_page_content
-                ).source_location.first
-              )
-            )
             result = helper.send(:load_translations, base_path, 'en')
             expect(result['title']).to eq('App Maintenance')
             expect(result['description']).to eq('App is being updated...')
@@ -255,14 +258,6 @@ RSpec.describe RailsMaint::MaintenancePageHelper do
       it 'falls back to the gem locale file' do
         Dir.mktmpdir do |tmpdir|
           Dir.chdir(tmpdir) do
-            base_path = File.expand_path(
-              '..',
-              File.dirname(
-                RailsMaint::MaintenancePageHelper.instance_method(
-                  :default_maintenance_page_content
-                ).source_location.first
-              )
-            )
             result = helper.send(:load_translations, base_path, 'en')
             expect(result['title']).to eq('System Maintenance')
           end

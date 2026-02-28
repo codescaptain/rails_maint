@@ -6,7 +6,7 @@ require 'fileutils'
 require 'yaml'
 
 RSpec.describe RailsMaint::Middleware do
-  let(:inner_app) { ->(env) { [200, { 'Content-Type' => 'text/plain' }, ['OK']] } }
+  let(:inner_app) { ->(_env) { [200, { 'Content-Type' => 'text/plain' }, ['OK']] } }
   let(:middleware) { described_class.new(inner_app) }
   let(:env) { { 'REMOTE_ADDR' => '192.168.1.100' } }
 
