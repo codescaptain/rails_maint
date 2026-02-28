@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git rm:*)",
+      "Bash(bundle lock:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh run:*)",
+      "Bash(bundle exec:*)",
+      "Bash(ruby:*)",
+      "Bash(gem install:*)",
+      "Bash(export:*)",
+      "Bash(/opt/homebrew/Library/Homebrew/vendor/portable-ruby/3.4.8/bin/ruby:*)",
+      "Bash(brew install:*)",
+      "Bash(ls:*)",
+      "Bash(curl:*)",
+      "Bash(git:*)",
+      "Bash(gh release:*)"
+    ]
+  }
+}
