@@ -145,6 +145,39 @@ Runs and writes tests. Conventions:
 - Test edge cases: missing files, empty config, invalid input
 - Reset configuration after each test (handled by spec_helper)
 
+### feature-developer
+End-to-end feature development from design to merge-ready code. Workflow:
+1. **Explore** — Read existing code to understand patterns, find where the feature fits
+2. **Plan** — Identify files to create/modify, define the public API, consider edge cases
+3. **Implement** — Write code following project conventions:
+   - New modules go in `lib/rails_maint/`, matching the existing naming pattern
+   - Configuration options added to `Configuration` class with sensible defaults
+   - YAML config keys added to `config_loader.rb` and generator templates
+   - Middleware features wired through `effective_config` / `effective_array_config` helpers
+   - CLI commands follow Thor DSL with `desc`, `method_option`, and private helpers
+   - Extract classes when methods exceed 20 lines or classes exceed 100 lines (RuboCop limits)
+4. **Test** — Write specs before or alongside implementation:
+   - Mirror lib/ path under spec/ (e.g., `lib/rails_maint/foo.rb` → `spec/rails_maint/foo_spec.rb`)
+   - Use `Dir.mktmpdir` + `Dir.chdir` for any file I/O
+   - Stub external calls (Net::HTTP, Time.now) — no real network or time dependencies
+   - Cover happy path, error path, edge cases, and backward compatibility
+5. **Lint** — Run `bundle exec rubocop` and fix all offenses before committing
+6. **Verify** — Run `bundle exec rspec` — all tests must pass (0 failures)
+7. **Document** — Update CHANGELOG.md (Unreleased section) and README.md if user-facing
+
+Checklist for new features:
+- [ ] `frozen_string_literal: true` on all new files
+- [ ] Single-quote strings unless interpolation needed
+- [ ] Configuration DSL attr + YAML key + generator template updated
+- [ ] Middleware uses `effective_config` for new settings (YAML > DSL > default precedence)
+- [ ] Security: validate/sanitize all external input (paths, IPs, URLs, user strings)
+- [ ] Backward compatible — existing config files and flag files must still work
+- [ ] Spec file with full coverage
+- [ ] `bundle exec rspec` passes (0 failures)
+- [ ] `bundle exec rubocop` passes (0 offenses)
+- [ ] CHANGELOG.md updated
+- [ ] README.md updated if user-facing
+
 ## Common Pitfalls
 
 - **Don't require 'rails'** in lib files loaded outside Rails — use `defined?(Rails::Railtie)` guards
