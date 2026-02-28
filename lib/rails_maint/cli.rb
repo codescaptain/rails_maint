@@ -34,6 +34,7 @@ module RailsMaint
       puts "  Scheduled start: #{options[:start]}" if options[:start]
       puts "  Scheduled end: #{options[:end]}" if options[:end]
 
+      Instrumentation.instrument('enabled', start_time: options[:start], end_time: options[:end])
       notify_webhook('maintenance.enabled')
     end
 
@@ -41,6 +42,7 @@ module RailsMaint
     def disable
       delete_file('tmp/maintenance_mode.txt')
       puts 'Maintenance mode disabled.'
+      Instrumentation.instrument('disabled')
       notify_webhook('maintenance.disabled')
     end
 

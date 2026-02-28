@@ -1,4 +1,11 @@
 # RailsMaint
+
+[![Gem Version](https://badge.fury.io/rb/rails_maint.svg)](https://badge.fury.io/rb/rails_maint)
+[![Build Status](https://github.com/codescaptain/rails_maint/workflows/CI/badge.svg)](https://github.com/codescaptain/rails_maint/actions)
+[![codecov](https://codecov.io/gh/codescaptain/rails_maint/branch/main/graph/badge.svg)](https://codecov.io/gh/codescaptain/rails_maint)
+[![Ruby Style Guide](https://img.shields.io/badge/code_style-rubocop-brightgreen.svg)](https://github.com/rubocop/rubocop)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 <img src="https://github.com/user-attachments/assets/4daa45fe-833b-48c5-9f69-457424769804" width="500" height="500" alt="rails_maint">
 
 

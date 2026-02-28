@@ -42,11 +42,13 @@ RSpec.describe RailsMaint::Webhook do
     end
 
     context 'when the request fails' do
-      it 'prints a warning and does not raise' do
+      it 'logs a warning and does not raise' do
         allow(Net::HTTP).to receive(:new).and_raise(Errno::ECONNREFUSED)
+        allow(RailsMaint.logger).to receive(:warn)
 
-        expect { described_class.notify('http://example.com/webhook', event: 'maintenance.enabled') }
-          .to output(/Webhook notification failed/).to_stderr
+        described_class.notify('http://example.com/webhook', event: 'maintenance.enabled')
+
+        expect(RailsMaint.logger).to have_received(:warn).with(/Webhook notification failed/)
       end
     end
   end

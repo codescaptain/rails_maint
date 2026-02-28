@@ -2,6 +2,10 @@
 
 module RailsMaint
   class Railtie < Rails::Railtie
+    initializer 'rails_maint.logger' do
+      RailsMaint.logger = Rails.logger
+    end
+
     initializer 'rails_maint.middleware' do |app|
       app.middleware.use RailsMaint::Middleware unless app.middleware.include?(RailsMaint::Middleware)
     end

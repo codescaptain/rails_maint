@@ -14,6 +14,7 @@ module RailsMaint
 
     def call(env)
       if maintenance_active? && !ip_whitelisted?(env) && !path_bypassed?(env) && path_affected?(env)
+        log_blocked_request(env)
         [503, response_headers, [maintenance_page]]
       else
         @app.call(env)
@@ -42,25 +43,14 @@ module RailsMaint
       bypass = effective_array_config(:bypass_paths, 'bypass_paths')
       return false if bypass.empty?
 
-      request_path = env['PATH_INFO'] || '/'
-      bypass.any? { |pattern| path_matches?(pattern, request_path) }
+      PathMatcher.any_match?(bypass, env['PATH_INFO'] || '/')
     end
 
     def path_affected?(env)
       maintenance = effective_array_config(:maintenance_paths, 'maintenance_paths')
       return true if maintenance.empty?
 
-      request_path = env['PATH_INFO'] || '/'
-      maintenance.any? { |pattern| path_matches?(pattern, request_path) }
-    end
-
-    def path_matches?(pattern, request_path)
-      if pattern.end_with?('/*')
-        prefix = pattern.chomp('/*')
-        request_path.start_with?(prefix)
-      else
-        request_path == pattern
-      end
+      PathMatcher.any_match?(maintenance, env['PATH_INFO'] || '/')
     end
 
     def response_headers
@@ -101,6 +91,13 @@ module RailsMaint
       expanded = File.expand_path(path)
       app_root = File.expand_path('.')
       expanded.start_with?(app_root)
+    end
+
+    def log_blocked_request(env)
+      ip = env['REMOTE_ADDR']
+      path = env['PATH_INFO'] || '/'
+      RailsMaint.logger.info("[rails_maint] Blocked request: ip=#{ip} path=#{path}")
+      Instrumentation.instrument('request_blocked', remote_ip: ip, path: path)
     end
 
     def effective_config(dsl_key, yaml_key, default)

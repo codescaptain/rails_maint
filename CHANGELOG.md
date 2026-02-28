@@ -18,6 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **CLI `status` command** — `rails_maint status` shows current maintenance state and configuration
 - **Webhook notifications** — POST JSON to a configured URL on enable/disable events
 - **ConfigLoader module** — Shared YAML config loading extracted from middleware and CLI
+- **Rails.logger integration** — All log output goes through `RailsMaint.logger` (auto-wired to `Rails.logger` via Railtie)
+- **ActiveSupport::Notifications** — Instrumentation events: `request_blocked.rails_maint`, `enabled.rails_maint`, `disabled.rails_maint`
+- **Custom error classes** — `InvalidConfigurationError`, `InvalidLocaleError`, `ScheduleError`, `WebhookError`
+- **Configuration validation** — `validate!` checks locale format, retry_after, and webhook_url on `RailsMaint.configure`
+- **SimpleCov code coverage** — 99%+ line coverage with branch coverage tracking
+- **README badges** — Gem version, CI status, Codecov, RuboCop style, MIT license
 - **Schedule module** — Parses scheduled maintenance windows with backward-compatible flag file format
 - `remaining_time` translation key added to en.yml and tr.yml
 

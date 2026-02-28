@@ -1,6 +1,15 @@
 # frozen_string_literal: true
 
+require 'simplecov'
+SimpleCov.start do
+  add_filter '/spec/'
+  add_filter '/lib/generators/'
+  enable_coverage :branch
+  minimum_coverage 80
+end
+
 require 'bundler/setup'
+require 'logger'
 require 'rails_maint'
 
 RSpec.configure do |config|
@@ -14,7 +23,12 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  config.before(:suite) do
+    RailsMaint.logger = Logger.new(File::NULL)
+  end
+
   config.after do
     RailsMaint.reset_configuration!
+    RailsMaint.logger = Logger.new(File::NULL)
   end
 end

@@ -31,7 +31,7 @@ module RailsMaint
 
       http.request(request)
     rescue StandardError => e
-      warn "[rails_maint] Webhook notification failed: #{e.message}"
+      RailsMaint.logger.warn("[rails_maint] Webhook notification failed: #{e.message}")
     end
   end
 end
