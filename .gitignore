@@ -10,3 +10,19 @@
 # rspec failure tracking
 .rspec_status
 *.gem
+
+# IDE files
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+*~
+
+# Editor swap files
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local

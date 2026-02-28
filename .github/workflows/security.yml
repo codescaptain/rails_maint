@@ -1,0 +1,31 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6 AM UTC
+
+permissions:
+  contents: read
+
+jobs:
+  bundle-audit:
+    name: Bundle Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Install bundler-audit
+        run: gem install bundler-audit
+
+      - name: Run bundle-audit
+        run: bundle-audit check --update

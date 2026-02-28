@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release Gem
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+
+      - name: Run tests before release
+        run: bundle exec rspec
+
+      - name: Build gem
+        run: gem build rails_maint.gemspec
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: '*.gem'
+
+      - name: Publish to RubyGems
+        env:
+          GEM_HOST_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+        run: |
+          mkdir -p ~/.gem
+          echo "---" > ~/.gem/credentials
+          echo ":rubygems_api_key: ${GEM_HOST_API_KEY}" >> ~/.gem/credentials
+          chmod 0600 ~/.gem/credentials
+          gem push rails_maint-*.gem

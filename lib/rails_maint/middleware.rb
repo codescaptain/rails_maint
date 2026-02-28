@@ -1,4 +1,8 @@
-# lib/rails_maint/middleware.rb
+# frozen_string_literal: true
+
+require 'yaml'
+require_relative 'helpers/maintenance_page_helper'
+
 module RailsMaint
   class Middleware
     include MaintenancePageHelper
@@ -24,14 +28,14 @@ module RailsMaint
     def ip_whitelisted?(env)
       config = load_config
       white_listed_ips = config['white_listed_ips'] || []
-      client_ip = env['HTTP_X_FORWARDED_FOR']&.split(',')&.first&.strip || env['REMOTE_ADDR']
+      client_ip = env['REMOTE_ADDR']
       white_listed_ips.include?(client_ip)
     end
 
     def load_config
       config_path = 'config/rails_maint.yml'
       if File.exist?(config_path)
-        YAML.load_file(config_path)
+        YAML.safe_load_file(config_path, permitted_classes: [])
       else
         {}
       end

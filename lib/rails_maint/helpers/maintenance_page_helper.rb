@@ -1,36 +1,39 @@
-# lib/rails_maint/helpers/maintenance_page_helper.rb
+# frozen_string_literal: true
+
 require 'yaml'
+require 'cgi'
 
 module RailsMaint
   module MaintenancePageHelper
+    ALLOWED_LOCALE_PATTERN = /\A[a-z]{2}(-[A-Z]{2})?\z/
+
     def default_maintenance_page_content(locale = 'en')
+      unless locale.to_s.match?(ALLOWED_LOCALE_PATTERN)
+        raise ArgumentError, "Invalid locale format: #{locale.inspect}"
+      end
+
       base_path = File.expand_path('../../', __FILE__)
       css_file = File.join(base_path, 'assets/default.css')
       html_file = File.join(base_path, 'assets/maintenance.html')
       locale_file = File.join(base_path, "assets/locales/#{locale}.yml")
 
-      # CSS ve HTML içeriğini oku
       css_content = File.read(css_file)
       html_template = File.read(html_file)
 
       app_locale_file = "config/locales/rails_maint.#{locale}.yml"
 
-      puts "APP LOCALE FILE: #{app_locale_file}"
       translations = if File.exist?(app_locale_file)
-                       YAML.load_file(app_locale_file)[locale]['rails_maint']
+                       YAML.safe_load_file(app_locale_file, permitted_classes: [])[locale]['rails_maint']
                      else
-                       YAML.load_file(locale_file)[locale]['rails_maint']
+                       YAML.safe_load_file(locale_file, permitted_classes: [])[locale]['rails_maint']
                      end
 
-      # Placeholder'ları değiştir
-      html_content = html_template
-                       .gsub('<%= css_content %>', css_content)
-                       .gsub('<%= lang %>', locale)
-                       .gsub('<%= title %>', translations['title'])
-                       .gsub('<%= description %>', translations['description'])
-                       .gsub('<%= estimated_time %>', translations['estimated_time'])
-
-      html_content
+      html_template
+        .gsub('<%= css_content %>', css_content)
+        .gsub('<%= lang %>', CGI.escapeHTML(locale.to_s))
+        .gsub('<%= title %>', CGI.escapeHTML(translations['title'].to_s))
+        .gsub('<%= description %>', CGI.escapeHTML(translations['description'].to_s))
+        .gsub('<%= estimated_time %>', CGI.escapeHTML(translations['estimated_time'].to_s))
     end
 
     def available_locales
