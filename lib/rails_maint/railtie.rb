@@ -7,7 +7,7 @@ module RailsMaint
     end
 
     initializer 'rails_maint.middleware' do |app|
-      app.middleware.use RailsMaint::Middleware unless app.middleware.include?(RailsMaint::Middleware)
+      app.middleware.use RailsMaint::Middleware
     end
   end
 end

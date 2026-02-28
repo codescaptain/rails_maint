@@ -26,7 +26,7 @@ module RailsMaint
           source = gem_locale_path(locale)
         end
 
-        copy_file source, "config/locales/rails_maint.#{locale}.yml"
+        create_file "config/locales/rails_maint.#{locale}.yml", File.read(source)
       end
 
       def create_initializer
@@ -50,7 +50,7 @@ module RailsMaint
       private
 
       def gem_locale_path(locale)
-        File.expand_path("../../../../rails_maint/assets/locales/#{locale}.yml", __dir__)
+        File.expand_path("../../../rails_maint/assets/locales/#{locale}.yml", __dir__)
       end
     end
   end
