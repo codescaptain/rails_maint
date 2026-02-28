@@ -11,6 +11,9 @@
 .rspec_status
 *.gem
 
+# Gem projects should not commit Gemfile.lock
+Gemfile.lock
+
 # IDE files
 .idea/
 .vscode/
