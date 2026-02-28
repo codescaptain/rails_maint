@@ -41,27 +41,27 @@ module RailsMaint
 
     def create_locale_file(locale = 'en')
       locale_dir = 'config/locales'
-      FileUtils.mkdir_p(locale_dir) unless Dir.exist?(locale_dir)
+      FileUtils.mkdir_p(locale_dir)
 
       locale_file_path = "#{locale_dir}/rails_maint.#{locale}.yml"
-      unless File.exist?(locale_file_path)
-        base_path = File.expand_path('../', __FILE__)
-        source_locale_file = File.join(base_path, "assets/locales/#{locale}.yml")
+      return if File.exist?(locale_file_path)
 
-        unless File.exist?(source_locale_file)
-          puts "Error: Locale '#{locale}' is not supported. Available locales: #{available_locales.join(', ')}"
-          return
-        end
+      base_path = File.expand_path(__dir__)
+      source_locale_file = File.join(base_path, "assets/locales/#{locale}.yml")
 
-        FileUtils.cp(source_locale_file, locale_file_path)
+      unless File.exist?(source_locale_file)
+        puts "Error: Locale '#{locale}' is not supported. Available locales: #{available_locales.join(', ')}"
+        return
       end
+
+      FileUtils.cp(source_locale_file, locale_file_path)
     end
 
     def create_config_file
       config_path = 'config/rails_maint.yml'
-      unless File.exist?(config_path)
-        File.write(config_path, default_config_content)
-      end
+      return if File.exist?(config_path)
+
+      File.write(config_path, default_config_content)
     end
 
     def delete_file(path)

@@ -6,5 +6,4 @@ require_relative 'rails_maint/middleware'
 
 module RailsMaint
   class Error < StandardError; end
-  # Your code goes here...
 end
